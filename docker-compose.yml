@@ -1,0 +1,93 @@
+services:
+  proxy-desktop:
+    image: mitmproxy/mitmproxy
+    command: mitmweb --web-host *
+    init: true
+    ports:
+      - 8080:8081
+    volumes:
+      - proxy-desktop-mitm:/home/mitmproxy/.mitmproxy
+    networks:
+      default:
+      desktop:
+        aliases:
+          - proxy
+
+  desktop:
+    build: ./desktop
+    hostname: desktop
+    shm_size: 512m
+    environment:
+      http_proxy: http://proxy:8080
+      https_proxy: http://proxy:8080
+      CA_FILE: /usr/share/mitmproxy/mitmproxy-ca-cert.cer
+      VNCOPTIONS: "-publicIP 127.0.0.1"
+      VNC_PW: password
+    depends_on:
+      - proxy-desktop
+    volumes:
+      - proxy-desktop-mitm:/usr/share/mitmproxy
+      - desktop:/home/vscode
+      - desktop-ssh:/home/vscode/.ssh
+    networks:
+      desktop:
+      ssh:
+
+  gateway-desktop:
+    build: ./gateway
+    command: socat tcp-listen:6901,reuseaddr,fork tcp-connect:desktop:6901
+    depends_on:
+      - desktop
+    ports:
+      - 6901:6901
+    networks:
+      default:
+      desktop:
+
+  proxy-server:
+    image: mitmproxy/mitmproxy
+    command: mitmweb --web-host *
+    init: true
+    ports:
+      - 8081:8081
+    volumes:
+      - proxy-server-mitm:/home/mitmproxy/.mitmproxy
+    networks:
+      default:
+      server:
+        aliases:
+          - proxy
+
+  server:
+    build: ./server
+    hostname: server
+    environment:
+      http_proxy: http://proxy:8080
+      https_proxy: http://proxy:8080
+      CA_FILE: /usr/share/mitmproxy/mitmproxy-ca-cert.cer
+      SSH_KEY_FILE: /usr/share/desktop-ssh/id_rsa.pub
+    depends_on:
+      - desktop
+      - proxy-server
+    volumes:
+      - proxy-server-mitm:/usr/share/mitmproxy
+      - server:/home/vscode
+      - desktop-ssh:/usr/share/desktop-ssh
+    networks:
+      server:
+      ssh:
+
+volumes:
+  proxy-desktop-mitm:
+  proxy-server-mitm:
+  desktop:
+  desktop-ssh:
+  server:
+
+networks:
+  desktop:
+    internal: true
+  server:
+    internal: true
+  ssh:
+    internal: true
