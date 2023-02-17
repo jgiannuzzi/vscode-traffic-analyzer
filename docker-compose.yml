@@ -17,6 +17,8 @@ services:
     build: ./desktop
     hostname: desktop
     shm_size: 512m
+    cap_add:
+      - ipc_lock
     environment:
       http_proxy: http://proxy:8080
       https_proxy: http://proxy:8080
