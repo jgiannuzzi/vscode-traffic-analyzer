@@ -1,7 +1,7 @@
 services:
   proxy-desktop:
     image: mitmproxy/mitmproxy
-    command: mitmweb --web-host *
+    command: mitmweb --web-host * --set console_focus_follow=true
     init: true
     ports:
       - 8080:8081
@@ -48,7 +48,7 @@ services:
 
   proxy-server:
     image: mitmproxy/mitmproxy
-    command: mitmweb --web-host *
+    command: mitmweb --web-host * --set console_focus_follow=true
     init: true
     ports:
       - 8081:8081
