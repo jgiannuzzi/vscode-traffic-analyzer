@@ -1,12 +1,13 @@
 services:
   proxy-desktop:
     image: mitmproxy/mitmproxy
-    command: mitmweb --web-host * --set console_focus_follow=true
+    command: mitmweb --web-host * --set console_focus_follow=true --scripts /home/mitmproxy/scripts/copilot.py
     init: true
     ports:
       - 8080:8081
     volumes:
       - proxy-desktop-mitm:/home/mitmproxy/.mitmproxy
+      - ./proxy-scripts:/home/mitmproxy/scripts:ro
     networks:
       default:
       desktop:
@@ -48,12 +49,13 @@ services:
 
   proxy-server:
     image: mitmproxy/mitmproxy
-    command: mitmweb --web-host * --set console_focus_follow=true
+    command: mitmweb --web-host * --set console_focus_follow=true --scripts /home/mitmproxy/scripts/copilot.py
     init: true
     ports:
       - 8081:8081
     volumes:
       - proxy-server-mitm:/home/mitmproxy/.mitmproxy
+      - ./proxy-scripts:/home/mitmproxy/scripts:ro
     networks:
       default:
       server:
